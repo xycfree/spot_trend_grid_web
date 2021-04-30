@@ -98,7 +98,7 @@ class SpotTrendGridView(views.View):
                         time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                     else:
                         logger.warning(f"买单挂单失败,失败原因:{res}")
-                        time.sleep(60*2)
+                        time.sleep(60*5)
 
                 elif grid_sell_price < cur_market_price and index.calcAngle(coin_info.coin_type, "5m", True,
                                                                             right_size):  # 是否满足卖出价
@@ -126,7 +126,7 @@ class SpotTrendGridView(views.View):
                             time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                         else:
                             logger.warning(f"卖单挂单失败,失败原因:{res}")
-                            time.sleep(60 * 2)
+                            time.sleep(60 * 5)
                 else:
                     logger.info("交易对:{coin_type},当前市价：{market_price}。未能满足交易,继续运行".format(
                         coin_type=coin_info.coin_type, market_price=cur_market_price))
