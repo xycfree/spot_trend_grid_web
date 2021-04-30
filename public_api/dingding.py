@@ -15,13 +15,11 @@ class Message:
         try:
             res = BinanceAPI(api_key, api_secret).buy_market(market, quantity)
             if res['orderId']:
-                buy_info = "报警：币种为：{cointype}。买单量为：{num}".format(cointype=market, num=quantity)
-                print("买单成功:{}".format(buy_info))
+                buy_info = "报警：[买单成功]币种为:{},买单量为：{}, 详情：{}".format(market, quantity, res)
                 self.dingding_warn(buy_info)
                 return res
-        except BaseException as e:
-            error_info = "报警：币种为：{cointype},买单失败:{err}.".format(cointype=market, err=str(res))
-            print("买单失败:{}".format(error_info))
+        except Exception as e:
+            error_info = "报警：[买单失败]币种为:{},买单失败:{}".format(market, res)
             self.dingding_warn(error_info)
             return res
 
@@ -35,14 +33,11 @@ class Message:
         try:
             res = BinanceAPI(api_key, api_secret).sell_market(market, quantity)
             if res['orderId']:
-                buy_info = "报警：币种为：{cointype}。卖单量为：{num}".format(cointype=market, num=quantity)
-                print("卖单成功:{}".format(buy_info))
-
+                buy_info = "报警：[卖单成功]币种:{},卖单量为:{}".format(market, quantity)
                 self.dingding_warn(buy_info)
                 return res
         except BaseException as e:
-            error_info = "报警：币种为：{cointype},卖单失败:{err}".format(cointype=market, err=str(res))
-            print("卖单失败:{}".format(error_info))
+            error_info = "报警：[卖单失败]币种为:{},卖单失败:{}".format(market, str(res))
             self.dingding_warn(error_info + str(res))
             return res
 
@@ -50,7 +45,10 @@ class Message:
         headers = {'Content-Type': 'application/json;charset=utf-8'}
         api_url = "https://oapi.dingtalk.com/robot/send?access_token=%s" % dingding_token
         json_text = self._msg(text)
-        requests.post(api_url, json.dumps(json_text), headers=headers).content()
+        try:
+            requests.post(api_url, json.dumps(json_text), headers=headers, timeout=10)
+        except Exception as e:
+            print("钉钉发送异常:{}".format(str(e)))
 
     def _msg(self, text):
         json_text = {

@@ -71,7 +71,7 @@ class SpotTrendGridView(views.View):
                 current_num = coin_info.current_num  # 当前连续买入次数
                 max_count = coin_info.max_count  # 连续买入而不卖出的最大次数
                 quantity = self.get_quantity(coin_info)  # 买入量
-                logger.info(f"{coin_info.coin_type}-当前价:{cur_market_price}--买入价:{grid_buy_price}--卖出价:{grid_sell_price}")
+                logger.debug(f"{coin_info.coin_type}-当前价:{cur_market_price}--买入价:{grid_buy_price}--卖出价:{grid_sell_price}")
 
                 # 设置的买入价 > 当前现货价格 and index.calcAngle->True
                 if grid_buy_price >= cur_market_price and index.calcAngle(
@@ -115,23 +115,21 @@ class SpotTrendGridView(views.View):
                             coin_info.current_income = money + float(income)
 
                             self.update_data(coin_info, grid_sell_price, -1, -1)
+                            # coin_info.save()
                             logger.info(f"交易对:{coin_info.coin_type},卖出价[{grid_sell_price}],数量[{quantity}],赢利[{money}],总盈利[{coin_info.current_income}]")
 
                             msg.dingding_warn(
                                 "卖单通知:\n" + "当前交易对:" + coin_info.coin_type + "卖出" + str(quantity) + "个,卖出价格是:" + str(
                                     grid_sell_price) + " USDT" + " 盈利:" + str(money) + "USDT" + "当前总盈利: " + str(
                                     coin_info.current_income) + "USDT")
-                            coin_info.save()
-
                             time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                         else:
                             logger.warning(f"卖单挂单失败,失败原因:{res}")
                             time.sleep(60 * 5)
                 else:
-                    logger.info("交易对:{coin_type},当前市价：{market_price}。未能满足交易,继续运行".format(
-                        coin_type=coin_info.coin_type, market_price=cur_market_price))
+                    logger.debug("交易对:{},当前市价：{}。未能满足交易,继续运行".format(coin_info.coin_type, cur_market_price))
                 time.sleep(1)
             except Exception as e:
-                logger.error(f"{coin_info.coin_type} 币种运行失败,原因为：{str(e)}")
+                logger.exception(f"交易对:{coin_info.coin_type}运行失败,原因：{str(e)}")
 
 

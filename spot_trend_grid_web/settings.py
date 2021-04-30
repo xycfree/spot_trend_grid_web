@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-from public_api.authorization import *
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -222,11 +221,21 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        "apscheduler.scheduler": {
+            'handlers': ["console", 'default'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        "apscheduler.executors.default": {
+            'handlers': ["console", 'default'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 
     "root": {
         'handlers': ['default', 'console', 'error'],
-        'level': "INFO",
+        'level': "DEBUG",
         'propagate': False
     }
 }

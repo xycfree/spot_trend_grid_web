@@ -9,7 +9,7 @@ from spot_trend_grid.views import SpotTrendGridView, logger
 class SpotTrendGridViews(views.View):
 
     def spot_start_run(self):
-        logger.info("定时任务开始执行")
+        logger.debug("定时任务开始执行")
         try:
             SpotTrendGridView().loop_run()
         except Exception as e:
