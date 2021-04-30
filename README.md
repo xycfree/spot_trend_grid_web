@@ -4,6 +4,8 @@ wsgi.py 中的
 ```scheduler.add_job(spot.spot_start_run, "interval", seconds=30, id="spot_grid_run", replace_existing=True)```
 seconds 字段控制间隔时间,每30s会执行一次,如果是1分钟,请设置60
 
+Apikey添加
+```publicapi/authorization_bak.py改成authorization.py，添加自己的apikey和钉钉token```
 
 启动运行服务
 
