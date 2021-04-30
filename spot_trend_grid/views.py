@@ -93,6 +93,7 @@ class SpotTrendGridView(views.View):
 
                     res = msg.buy_market_msg(coin_info.coin_type, quantity)
                     if res['orderId']:  # 挂单成功
+                        logger.info("买单挂单成功:{}".format(res))
                         self.update_data(coin_info, grid_buy_price, 1, 1)  # 修改买入卖出价格、当前步数,连续买入的次数
                         time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                     else:
@@ -106,7 +107,7 @@ class SpotTrendGridView(views.View):
                     else:
                         res = msg.sell_market_msg(coin_info.coin_type, self.get_quantity(coin_info))
                         if res['orderId']:
-
+                            logger.info("卖单挂单成功:{}".format(res))
                             money = float((1 - charge_amount)) * float(grid_sell_price) * quantity - float((
                                     1 + charge_amount)) * float(grid_buy_price) * quantity
                             income = coin_info.current_income
