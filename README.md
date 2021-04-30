@@ -1,6 +1,54 @@
+#### 现货趋势网格 web版
+
+wsgi.py 中的    
+```scheduler.add_job(spot.spot_start_run, "interval", seconds=30, id="spot_grid_run", replace_existing=True)```
+seconds 字段控制间隔时间,每30s会执行一次,如果是1分钟,请设置60
+
+
+启动运行服务
+
+```shell script
+python3 manage.py runserver 
+```
+运行此命令的窗口请勿关闭
+
+浏览器访问 127.0.0.1:8000/admin
+
+#### linux运行
+
+需要将```settings.py中的ALLOWED_HOSTS = []``` 修改为```ALLOWED_HOSTS = ["*"]```
+云服务需要将安全组端口8000 端口开放访问
+
+先执行以下命令
+
+```shell script
+python3 -m venv venv
+source venv/bin/activate
+```
+
+然后再执行以下命令
+
+```shell script
+pip install -r requirements.txt 
+python3 manage.py makemigrations
+python3 manage.py migrate
+python3 manage.py createsuperuser
+```
+
+```shell script
+# linux后台 运行命令
+nohup python3 manage.py runserver &
+```
+
+注意linux每次运行前需先在有venv目录的层级执行```source venv/bin/activate```
+---
+
+
+
+
 
 ### 🎉第二版本🎉 （现货趋势网格）
-
+https://github.com/hengxuZ/spot-trend-grid
 ---
 
 ### 介绍
