@@ -127,3 +127,25 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# mypy
+.mypy_cache/
+.idea
+.idea/
+.idea/*
+.logs/
+*.log.*
+
+*.apk
+
+temp/
+
+screenshots/
+
+reports/
+
+failures
+
+public_api/authorization.py
+db.sqlite3
