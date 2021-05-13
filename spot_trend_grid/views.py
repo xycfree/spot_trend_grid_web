@@ -18,15 +18,16 @@ index = CalcIndex()
 
 # 手续费
 charge_amount = 0.00075
+notice_di = {}
 
 
 class SpotTrendGridView(views.View):
 
     def get_quantity(self, coin_info_obj, min_quantity=False):
-        '''
+        """
         :param exchange: min_quantity用于控制减仓
         :return:
-        '''
+        """
 
         quantity_arr = coin_info_obj.quantity.split(",")
 
@@ -44,7 +45,7 @@ class SpotTrendGridView(views.View):
     def update_data(self, coin_info_obj, deal_price, step, current_num):
         """ 现货策略更新
         :param coin_info_obj: 交易对信息
-        :param deal_price: 买价/卖家
+        :param deal_price: 买价/卖价
         :param step: 步长
         :param current_num: 当前下单次数
         :return:
@@ -86,15 +87,19 @@ class SpotTrendGridView(views.View):
                         quantity = self.get_quantity(coin_info)  # 买入量
 
                     if current_num == max_count:
+                        if notice_di.get(coin_info.coin_type):
+                            return
                         logger.info(f"交易对:{coin_info.coin_type}--已买入最大次数[{current_num}]--暂停买入")
                         msg.dingding_warn(
                             "报警通知:\n" + "当前交易对:" + coin_info.coin_type + "连续买入次数已达" + str(current_num) + "次,暂停买入")
+                        notice_di[coin_info.coin_type] = 1
                         return
 
                     res = msg.buy_market_msg(coin_info.coin_type, quantity)
                     if res['orderId']:  # 挂单成功
                         logger.info("买单挂单成功:{}".format(res))
                         self.update_data(coin_info, grid_buy_price, 1, 1)  # 修改买入卖出价格、当前步数,连续买入的次数
+
                         time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                     else:
                         logger.warning(f"买单挂单失败,失败原因:{res}")
@@ -122,6 +127,7 @@ class SpotTrendGridView(views.View):
                                 "卖单通知:\n" + "当前交易对:" + coin_info.coin_type + "卖出" + str(quantity) + "个,卖出价格是:" + str(
                                     grid_sell_price) + " USDT" + " 盈利:" + str(money) + "USDT" + "当前总盈利: " + str(
                                     coin_info.current_income) + "USDT")
+                            notice_di[coin_info.coin_type] = 0
                             time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                         else:
                             logger.warning(f"卖单挂单失败,失败原因:{res}")
