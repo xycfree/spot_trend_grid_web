@@ -1,15 +1,15 @@
-import time
 import logging
+
+import time
 from django import views
 
 from data.calcIndex import CalcIndex
 from public_api.BinanceAPI import BinanceAPI
 from public_api.authorization import api_key, api_secret
-from spot_trend_grid.models import SpotConfigModel
 from public_api.dingding import Message
+from spot_trend_grid.models import SpotConfigModel, NewsNoticeModel
 
 logger = logging.getLogger(__name__)
-
 
 binan = BinanceAPI(api_key, api_secret)
 msg = Message()
@@ -18,7 +18,6 @@ index = CalcIndex()
 
 # 手续费
 charge_amount = 0.00075
-notice_di = {}
 
 
 class SpotTrendGridView(views.View):
@@ -50,14 +49,19 @@ class SpotTrendGridView(views.View):
         :param current_num: 当前下单次数
         :return:
         """
-        coin_info_obj.next_buy_price = round(deal_price * (1 - coin_info_obj.double_throw_ratio / 100),
-                                             coin_info_obj.min_num)
-        coin_info_obj.grid_sell_price = round(deal_price * (1 + coin_info_obj.profit_ratio / 100),
-                                              coin_info_obj.min_num)
-        coin_info_obj.step += step
-        coin_info_obj.current_num += current_num
-        coin_info_obj.current_num = max([0, coin_info_obj.current_num])
-        coin_info_obj.save()
+        try:
+            coin_info_obj.next_buy_price = round(deal_price * (1 - coin_info_obj.double_throw_ratio / 100),
+                                                 coin_info_obj.min_num)
+            coin_info_obj.grid_sell_price = round(deal_price * (1 + coin_info_obj.profit_ratio / 100),
+                                                  coin_info_obj.min_num)
+            coin_info_obj.step += step
+            coin_info_obj.current_num += current_num
+            coin_info_obj.current_num = max([0, coin_info_obj.current_num])
+            coin_info_obj.save()
+            logger.debug(f"交易对{coin_info_obj.coin_type},数据更新成功")
+        except Exception as e:
+            logger.exception(f"交易对{coin_info_obj.coin_type},数据更新异常:{str(e)}\n退出程序")
+            exit()
 
     def loop_run(self):
         for coin_info in SpotConfigModel.objects.filter(if_use=1):
@@ -72,13 +76,30 @@ class SpotTrendGridView(views.View):
                 current_num = coin_info.current_num  # 当前连续买入次数
                 max_count = coin_info.max_count  # 连续买入而不卖出的最大次数
                 quantity = self.get_quantity(coin_info)  # 买入量
-                logger.debug(f"{coin_info.coin_type}-当前价:{cur_market_price}--买入价:{grid_buy_price}--卖出价:{grid_sell_price}")
+                logger.debug(
+                    f"{coin_info.coin_type}-当前价:{cur_market_price}--买入价:{grid_buy_price}--卖出价:{grid_sell_price}")
 
                 # 设置的买入价 > 当前现货价格 and index.calcAngle->True
                 if grid_buy_price >= cur_market_price and index.calcAngle(
                         coin_info.coin_type, "5m", False, right_size):  # 是否满足买入价
 
-                    if float(current_num / max_count) > 0.6:
+                    if current_num == max_count:
+                        news, flag = NewsNoticeModel.objects.get_or_create(
+                            coin_id=coin_info.id,
+                            coin_type=coin_info.coin_type,
+                            if_use=True,
+                            defaults={"status": 1}
+                        )
+                        if flag or news.status == 0:  # 第一次或者status为0则发送
+                            logger.info(f"交易对:{coin_info.coin_type}--已买入最大次数[{current_num}]--暂停买入")
+                            msg.dingding_warn(
+                                "报警通知:\n" + "当前交易对:" + coin_info.coin_type + "连续买入次数已达" + str(current_num) + "次,暂停买入")
+                            continue
+                        else:
+                            logger.info(f"交易对:{coin_info.coin_type}--已买入最大次数[{current_num}]--暂停买入")
+                            continue
+
+                    if float(current_num / max_count) > 0.6 and current_num != max_count:
                         quantity = self.get_quantity(coin_info, min_quantity=True)
                         logger.info(f"交易对:{coin_info.coin_type}-连续买入次数[{current_num}]-调整最低购买量[{quantity}]")
                         msg.dingding_warn("报警通知:\n" + "当前交易对:" + coin_info.coin_type + "连续买入次数已达" + str(
@@ -86,14 +107,7 @@ class SpotTrendGridView(views.View):
                     else:
                         quantity = self.get_quantity(coin_info)  # 买入量
 
-                    if current_num == max_count:
-                        if notice_di.get(coin_info.coin_type):
-                            return
-                        logger.info(f"交易对:{coin_info.coin_type}--已买入最大次数[{current_num}]--暂停买入")
-                        msg.dingding_warn(
-                            "报警通知:\n" + "当前交易对:" + coin_info.coin_type + "连续买入次数已达" + str(current_num) + "次,暂停买入")
-                        notice_di[coin_info.coin_type] = 1
-                        return
+
 
                     res = msg.buy_market_msg(coin_info.coin_type, quantity)
                     if res['orderId']:  # 挂单成功
@@ -103,7 +117,7 @@ class SpotTrendGridView(views.View):
                         time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                     else:
                         logger.warning(f"买单挂单失败,失败原因:{res}")
-                        time.sleep(60*5)
+                        time.sleep(60 * 5)
 
                 elif grid_sell_price < cur_market_price and index.calcAngle(coin_info.coin_type, "5m", True,
                                                                             right_size):  # 是否满足卖出价
@@ -120,14 +134,19 @@ class SpotTrendGridView(views.View):
                             coin_info.current_income = money + float(income)
 
                             self.update_data(coin_info, grid_sell_price, -1, -1)
-                            # coin_info.save()
-                            logger.info(f"交易对:{coin_info.coin_type},卖出价[{grid_sell_price}],数量[{quantity}],赢利[{money}],总盈利[{coin_info.current_income}]")
+
+                            news1 = NewsNoticeModel.objects.filter(coin_id=coin_info.id)  # 修改钉钉通知状态
+                            if news1 and news1[0].status == 1:
+                                news1[0].status = 0
+                                news1[0].save()
+
+                            logger.info(
+                                f"交易对:{coin_info.coin_type},卖出价[{grid_sell_price}],数量[{quantity}],赢利[{money}],总盈利[{coin_info.current_income}]")
 
                             msg.dingding_warn(
                                 "卖单通知:\n" + "当前交易对:" + coin_info.coin_type + "卖出" + str(quantity) + "个,卖出价格是:" + str(
                                     grid_sell_price) + " USDT" + " 盈利:" + str(money) + "USDT" + "当前总盈利: " + str(
                                     coin_info.current_income) + "USDT")
-                            notice_di[coin_info.coin_type] = 0
                             time.sleep(60 * 2)  # 挂单后，停止运行1分钟
                         else:
                             logger.warning(f"卖单挂单失败,失败原因:{res}")
@@ -137,5 +156,3 @@ class SpotTrendGridView(views.View):
                 time.sleep(1)
             except Exception as e:
                 logger.exception(f"交易对:{coin_info.coin_type}运行失败,原因：{str(e)}")
-
-

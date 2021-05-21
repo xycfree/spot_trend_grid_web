@@ -31,3 +31,14 @@ class SpotConfigModel(models.Model):
         verbose_name = '现货趋势策略'
         verbose_name_plural = '现货趋势策略'
 
+
+class NewsNoticeModel(models.Model):
+    id = models.AutoField(primary_key=True, help_text="自增id")
+    coin_id = models.IntegerField(verbose_name="交易对ID", help_text="交易对ID,对应SpotConfigModel.id")
+    coin_type = models.CharField(max_length=16, help_text="交易对,如BTC填入BTCUSDT)", verbose_name="交易对")
+    status = models.IntegerField(verbose_name="钉钉通知标记", help_text="已达最大购买次数通知标记0:通知,1不通知")
+    if_use = models.BooleanField(verbose_name="是否启用", default=True)
+
+    class Meta:
+        verbose_name = '最大购买次数通知标记'
+        verbose_name_plural = '钉钉通知标记'

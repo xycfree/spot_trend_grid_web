@@ -1,10 +1,14 @@
 from data.runBetData import RunBetData
 from public_api.BinanceAPI import BinanceAPI
 from public_api.authorization import api_key, api_secret
+import logging
+
+from spot_trend_grid.models import SpotConfigModel
 
 runbet = RunBetData()
 binan = BinanceAPI(api_key, api_secret)
 
+logger = logging.getLogger(__name__)
 
 class CalcIndex:
 
@@ -92,12 +96,14 @@ class CalcIndex:
     def calcAngle(self, symbol, interval, direction, point):
         '''
 
-        :param symbol:
-        :param interval:
-        :param direction:
+        :param point: 小数点位长度
+        :param symbol: 交易对
+        :param interval: 时间间隔 5m/15m/20m...
+        :param direction: 方向 True/False
         :return: 趋势来了 正在拉伸 不买
         '''
         lastMA5, tmpMA5 = self.calcSlopeMA5(symbol, interval, point)
+        logger.debug("lastMA5:{}, tmpMA5:{}".format(lastMA5, tmpMA5))
         if direction:
             return tmpMA5 <= lastMA5
         else:
@@ -111,8 +117,9 @@ class CalcIndex:
 
         return round(sum_ma10 / 10, point)
 
-    def get_position_price(self, direction=True):
-        tmp = binan.get_positionInfo(runbet.get_cointype())
+    def get_position_price(self, symbol, direction=True):
+
+        tmp = binan.get_positionInfo(symbol)
         for item in tmp:  # 遍历是有仓位
             if direction:  # 多头持仓均价
                 if item['positionSide'] == "LONG" and float(item['positionAmt']) != 0.0:
