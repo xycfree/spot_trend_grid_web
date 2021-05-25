@@ -90,7 +90,15 @@ class SpotTrendGridView(views.View):
                             if_use=True,
                             defaults={"status": 1}
                         )
-                        if flag or news.status == 0:  # 第一次或者status为0则发送
+                        if flag:
+                            logger.info(f"交易对:{coin_info.coin_type}--已买入最大次数[{current_num}]--暂停买入")
+                            msg.dingding_warn(
+                                "报警通知:\n" + "当前交易对:" + coin_info.coin_type + "连续买入次数已达" + str(current_num) + "次,暂停买入")
+                            continue
+
+                        elif flag is False and news.status == 0:  # 第一次或者status为0则发送
+                            news.status = 1
+                            news.save()
                             logger.info(f"交易对:{coin_info.coin_type}--已买入最大次数[{current_num}]--暂停买入")
                             msg.dingding_warn(
                                 "报警通知:\n" + "当前交易对:" + coin_info.coin_type + "连续买入次数已达" + str(current_num) + "次,暂停买入")
@@ -106,8 +114,6 @@ class SpotTrendGridView(views.View):
                             current_num) + "次,调整为最低购买量" + str(quantity))
                     else:
                         quantity = self.get_quantity(coin_info)  # 买入量
-
-
 
                     res = msg.buy_market_msg(coin_info.coin_type, quantity)
                     if res['orderId']:  # 挂单成功
