@@ -1,4 +1,5 @@
 import json
+
 import requests
 
 from public_api.BinanceAPI import BinanceAPI
@@ -10,6 +11,18 @@ from public_api.authorization import dingding_token, api_secret, api_key
 # from app.authorization import dingding_token
 
 class Message:
+
+    def buy_limit_msg(self, market, quantity, rate):
+        try:
+            res = BinanceAPI(api_key, api_secret).buy_limit(market, quantity, rate)
+            if res['orderId']:
+                buy_info = "报警：[买单成功]币种为:{},买单量为：{}, 详情：{}".format(market, quantity, res)
+                self.dingding_warn(buy_info)
+                return res
+        except Exception as e:
+            error_info = "报警：[买单失败]币种为:{},买单失败:{}".format(market, res)
+            self.dingding_warn(error_info)
+            return res
 
     def buy_market_msg(self, market, quantity):
         try:
@@ -23,13 +36,31 @@ class Message:
             self.dingding_warn(error_info)
             return res
 
-    def sell_market_msg(self, market, quantity):
-        '''
+    def sell_limit_msg(self, market, quantity, rate):
+        """
         :param market:
         :param quantity: 数量
         :param rate: 价格
         :return:
-        '''
+        """
+        try:
+            res = BinanceAPI(api_key, api_secret).sell_limit(market, quantity, rate)
+            if res['orderId']:
+                buy_info = "报警：[卖单成功]币种:{},卖单量为:{}".format(market, quantity)
+                self.dingding_warn(buy_info)
+                return res
+        except BaseException as e:
+            error_info = "报警：[卖单失败]币种为:{},卖单失败:{}".format(market, str(res))
+            self.dingding_warn(error_info + str(res))
+            return res
+
+    def sell_market_msg(self, market, quantity):
+        """
+        :param market:
+        :param quantity: 数量
+        :param rate: 价格
+        :return:
+        """
         try:
             res = BinanceAPI(api_key, api_secret).sell_market(market, quantity)
             if res['orderId']:

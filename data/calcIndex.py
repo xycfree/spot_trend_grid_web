@@ -59,12 +59,12 @@ class CalcIndex:
     #     return [self.roundNum(last_ma10/10),self.roundNum(next_ma10/10)]
 
     def calcSlopeMA5(self, symbol, interval, point):
-        '''
+        """
 
         :param symbol:
         :param interval:
         :return: 上一时刻的m20值
-        '''
+        """
         last_ma5 = 0
         next_ma5 = 0
         data = binan.get_klines(symbol, interval, 6)
@@ -94,14 +94,14 @@ class CalcIndex:
     #         return lastMA10 > tmpMA10
 
     def calcAngle(self, symbol, interval, direction, point):
-        '''
+        """
 
         :param point: 小数点位长度
         :param symbol: 交易对
         :param interval: 时间间隔 5m/15m/20m...
-        :param direction: 方向 True/False
+        :param direction: 方向 True 卖出 / False 买入
         :return: 趋势来了 正在拉伸 不买
-        '''
+        """
         lastMA5, tmpMA5 = self.calcSlopeMA5(symbol, interval, point)
         logger.debug("lastMA5:{}, tmpMA5:{}".format(lastMA5, tmpMA5))
         if direction:
