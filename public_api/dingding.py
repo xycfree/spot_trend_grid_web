@@ -13,6 +13,12 @@ from public_api.authorization import dingding_token, api_secret, api_key
 class Message:
 
     def buy_limit_msg(self, market, quantity, rate):
+        """ 限价单买
+        :param market: 交易对
+        :param quantity: 交易数量
+        :param rate: 交易价格
+        :return:
+        """
         try:
             res = BinanceAPI(api_key, api_secret).buy_limit(market, quantity, rate)
             if res['orderId']:

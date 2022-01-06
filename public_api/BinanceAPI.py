@@ -14,9 +14,17 @@ except ImportError:
 
 
 class BinanceAPI(object):
-    BASE_URL = "https://www.binance.com/api/v1"
-    BASE_URL_V3 = "https://api.binance.com/api/v3"
-    PUBLIC_URL = "https://www.binance.com/exchange/public/product"
+    test_flag = True
+    if test_flag:
+        print("开启测试环境")
+        BASE_URL = "https://testnet.binance.vision/api/v1"
+        BASE_URL_V3 = "https://testnet.binance.vision/api/v3"
+        PUBLIC_URL = "https://www.binance.com/exchange/public/product"
+    else:
+        print("开启正式环境")
+        BASE_URL = "https://www.binance.com/api/v1"
+        BASE_URL_V3 = "https://api.binance.com/api/v3"
+        PUBLIC_URL = "https://www.binance.com/exchange/public/product"
 
     def __init__(self, key, secret):
         self.key = key
@@ -40,6 +48,7 @@ class BinanceAPI(object):
         params = {"symbol": market}
         res = self._get_no_sign(path, params)
         time.sleep(1)
+        # print(f"get_ticker_price: {res}")
         return float(res['price'])
 
     def get_ticker_24hour(self, market):
@@ -55,7 +64,7 @@ class BinanceAPI(object):
     #     return round(float(res['priceChangePercent']), 1)
 
 
-    def get_klines(self, market, interval, limit, startTime=None, endTime=None):
+    def get_klines(self, market, interval, limit=500, startTime=None, endTime=None):
         path = "%s/klines" % self.BASE_URL
         params = None
         if startTime is None:

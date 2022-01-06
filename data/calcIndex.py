@@ -2,11 +2,12 @@ from data.runBetData import RunBetData
 from public_api.BinanceAPI import BinanceAPI
 from public_api.authorization import api_key, api_secret
 import logging
+from data import binan
 
 from spot_trend_grid.models import SpotConfigModel
 
-runbet = RunBetData()
-binan = BinanceAPI(api_key, api_secret)
+# runbet = RunBetData()
+# binan = BinanceAPI(api_key, api_secret)
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,7 @@ class CalcIndex:
     def calcSlopeMA5(self, symbol, interval, point):
         """
 
+        :param point:
         :param symbol:
         :param interval:
         :return: 上一时刻的m20值
@@ -105,9 +107,17 @@ class CalcIndex:
         lastMA5, tmpMA5 = self.calcSlopeMA5(symbol, interval, point)
         logger.debug("lastMA5:{}, tmpMA5:{}".format(lastMA5, tmpMA5))
         if direction:
-            return tmpMA5 <= lastMA5
+            # 计算卖出指标
+            flag = tmpMA5 <= lastMA5
+            if not flag:
+                logger.info(f"symbol:{symbol},flag:{flag}, 正在拉伸, 不卖...")
+            return flag
         else:
-            return tmpMA5 >= lastMA5
+            # 计算买入指标
+            flag = tmpMA5 >= lastMA5
+            if not flag:
+                logger.info(f"symbol:{symbol},flag:{flag}, 正在拉伸, 不买...")
+            return flag
 
     def calcMA10(self, symbol, interval, point):
         sum_ma10 = 0

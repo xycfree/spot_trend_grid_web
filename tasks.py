@@ -18,6 +18,7 @@ class SpotTrendGridViews(views.View):
 class BatchOrderViews(views.View):
 
     def batch_order_start_run(self):
+
         logger.debug("分批建仓定时任务开始执行")
         try:
             BatchOrderView().loop_run()
@@ -28,6 +29,7 @@ class BatchOrderViews(views.View):
 class BatchOrderDetailViews(views.View):
 
     def batch_order_detail_start_run(self):
+
         logger.debug("分批建仓计划表定时任务开始执行")
         try:
             BatchOrderDetailView().loop_run()

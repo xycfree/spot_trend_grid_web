@@ -6,15 +6,15 @@ from .models import SpotConfigModel, NewsNoticeModel, BatchOrderModel, BatchOrde
 
 class SpotConfigModelAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'coin_type', "if_use", 'next_buy_price', 'grid_sell_price', 'step', 'profit_ratio', 'double_throw_ratio',
-        'quantity', 'current_num', "max_count", "min_num", "current_income")
+        'id', 'coin_type', "if_use", 'next_buy_price', 'grid_sell_price', 'last_price', 'step', 'profit_ratio',
+        'double_throw_ratio',  'price_quantity', 'current_num', 'free', "current_income")
 
     fieldsets = (
 
         ("交易对", {'fields': (("coin_type", "if_use"))}),
 
         ('交易设置', {'fields': (
-            ("next_buy_price", "grid_sell_price",), "step", "quantity", "current_num",
+            ("next_buy_price", "grid_sell_price",), "step", 'price_quantity', "current_num",
             ('profit_ratio', 'double_throw_ratio'))}),
         ("风控设置", {'fields': (("max_count", "min_num",))}),)
 
@@ -29,7 +29,7 @@ class NewsNoticeModelAdmin(admin.ModelAdmin):
 class BatchOrderModelAdmin(admin.ModelAdmin):
 
     list_display = (
-        'id', "total_money", "order_interval", "order_interval_increase", "initial_invest_capital",
+        'id', 'symbol', "total_money", "order_interval", "order_interval_increase", "initial_invest_capital",
         "capital_interval_increase", "profit_ratio", "price_precision", "amount_precision",
         "buy_procedure_fee", "sell_procedure_fee", "if_use", "status"
     )
